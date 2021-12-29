@@ -3,7 +3,7 @@ package ru.netology.model;
 public class Post {
     private long id;
     private String content;
-    private boolean isRemoved = false;
+    private transient boolean isRemoved = false;
 
     public Post() {
     }
