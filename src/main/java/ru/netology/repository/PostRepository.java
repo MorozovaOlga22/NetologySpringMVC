@@ -5,9 +5,9 @@ import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Repository
 public class PostRepository {
@@ -15,13 +15,15 @@ public class PostRepository {
     private final AtomicLong nextPostId = new AtomicLong(1L);
 
     public List<Post> all() {
-        return posts;
+        return posts.stream()
+                .filter(post -> !post.isRemoved())
+                .collect(Collectors.toList());
     }
 
-    public Optional<Post> getById(long id) {
+    public Post getById(long id) {
         return posts.stream()
-                .filter(post -> post.getId() == id)
-                .findFirst();
+                .filter(post -> post.getId() == id && !post.isRemoved())
+                .findFirst().orElseThrow(NotFoundException::new);
     }
 
     public Post save(Post post) {
@@ -30,13 +32,13 @@ public class PostRepository {
             posts.add(post);
             return post;
         } else {
-            final Post oldPost = getById(post.getId()).orElseThrow(NotFoundException::new);
+            final Post oldPost = getById(post.getId());
             oldPost.setContent(post.getContent());
             return oldPost;
         }
     }
 
     public void removeById(long id) {
-        posts.removeIf(post -> post.getId() == id);
+        getById(id).setRemoved(true);
     }
 }
